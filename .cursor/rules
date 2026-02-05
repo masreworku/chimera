@@ -1,0 +1,20 @@
+# Project Chimera: The Prime Directive
+
+## ## Project Context
+This is Project Chimera, an autonomous influencer system. We are building a fleet of goal-directed agents using the FastRender Swarm Architecture (Planner/Worker/Judge) and Coinbase AgentKit for agentic commerce.
+
+## ## The Prime Directive
+**NEVER generate code without checking specs/ first.** - All architectural decisions must align with specs/technical.md.
+- All agent behaviors must align with specs/functional.md.
+- High-level goals must align with specs/_meta.md.
+
+## ## Interaction Rules
+1. **Traceability:** You must explain your plan and how it maps to the existing specifications before writing a single line of implementation code.
+2. **TDD Workflow:** Always propose or write a failing test in the tests/ directory before writing the logic to pass it.
+3. **MCP Usage:** All external capabilities (Twitter, databases, wallets) must be implemented as Model Context Protocol (MCP) tools or resources.
+4. **Governance:** Ensure every action is routed through a "Judge" agent as defined in the Swarm pattern.
+
+## ## Execution Style
+- Use Python 3.11+.
+- Use asynchronous patterns (asyncio) for agent tasks.
+- Prioritize type safety and detailed logging for telemetry.
