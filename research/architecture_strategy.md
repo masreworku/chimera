@@ -1,16 +1,45 @@
 Architecture Strategy: Project Chimera (2026 Edition)
-1. Executive Summary
-Project Chimera transitions from static automation to Autonomous Influencer Agents—persistent, goal-directed entities with economic agency. This strategy utilizes a Fractal Orchestration pattern to manage a fleet of thousands of agents via a single human Super-Orchestrator.
-2. Agent Pattern: FastRender Swarm
-We reject monolithic agent designs in favor of the FastRender Swarm Architecture to optimize for throughput and decision quality.
+
+Last modified: 2026-02-05 · Author: (unspecified)
+
+TL;DR
+Project Chimera moves from static automation to Autonomous Influencer Agents: a scalable, fractal orchestration of thousands of lightweight agents managed by a single Super-Orchestrator. Recommended approach: FastRender Swarm (planner → workers → judge) with MCP for I/O, a hybrid persistence stack, and a probability-based HITL pipeline to balance speed and safety.
+
+Purpose & Audience
+- Purpose: Provide engineering and product teams with an actionable architecture and decision record to implement Chimera's autonomous agent platform.
+- Audience: Architects, engineering leads, product owners, security and compliance reviewers.
+
+Key Outcomes (up-front)
+- Deployable micro-agent fleet that meets latency and cost targets (see Metrics).
+- Clear decision log (ADRs) for major trade-offs.
+- Operational governance: safety, finance controls, and auditability.
+
+Decision Log (high level)
+- [ADR-001 — Event bus: Kafka](../docs/adrs/ADR-001-event-bus-kafka.md) (owner: TBD, 2026-02-05)
+- [ADR-002 — Semantic memory: Weaviate](../docs/adrs/ADR-002-semantic-memory-weaviate.md) (owner: TBD, 2026-02-05)
+
+ADR Template
+```markdown
+ADR-### — Title
+Context: One-paragraph background and constraints.
+Decision: Chosen option and short rationale.
+Alternatives: Brief alternatives considered.
+Consequences: Operational, cost, and security impacts.
+Owner: Name
+Date: YYYY-MM-DD
+```
+
+1. Executive Summary — Takeaway: adopt a Fractal Orchestration with FastRender Swarm
+Project Chimera transitions from static automation to Autonomous Influencer Agents—persistent, goal-directed entities with economic agency. The Fractal Orchestration pattern enables hierarchical control (Super-Orchestrator → planners → thousands of workers) to scale while keeping human oversight limited to exceptions.
+
+2. Agent Pattern: FastRender Swarm — Takeaway: favor stateless workers + planners + judges
 Role Definitions
-•	Planner (Strategist)
-Decomposes abstract campaign goals into a Directed Acyclic Graph (DAG) of executable tasks. Monitors trends via MCP Resources and dynamically re-plans based on real-world shifts.
-•	Worker (Executor)
-Stateless, ephemeral nodes that execute atomic tasks (e.g., Draft Caption, Generate Image) using MCP Tools.
-•	Judge (Gatekeeper)
-Conducts quality assurance by comparing Worker output against SOUL.md persona constraints. Uses Optimistic Concurrency Control (OCC) to prevent race conditions during state updates.
-Swarm Workflow (Mermaid.js)
+- Planner (Strategist): decomposes campaign goals into a DAG of tasks, monitors MCP resources, and triggers re-planning on external shifts. Owner: (assign)
+- Worker (Executor): stateless, ephemeral nodes executing atomic tasks (Draft Caption, Generate Image) via MCP Tools.
+- Judge (Gatekeeper): QA comparator enforcing persona constraints and policies (SOUL.md). Uses OCC for safe global state commits.
+
+Swarm Workflow (Mermaid)
+```mermaid
 graph TD
     subgraph Cognitive_Core
         P[Planner Agent] -->|Generates Task DAG| TQ[Task Queue: Redis]
@@ -31,44 +60,59 @@ graph TD
     end
 
     HITL -->|Manual Override| GS
+```
 
-3. Human-in-the-Loop (HITL) Strategy
-To balance autonomous velocity with brand safety, Chimera implements a Probability-Based HITL Framework.
-Confidence Scoring
-Every action is assigned a confidence_score (0.0–1.0) derived from LLM probability estimations.
-Routing Logic
-•	High Confidence (> 0.90)
-Auto-approved; executed immediately.
-•	Medium Confidence (0.70 – 0.90)
-Async approval; task is paused for human review in the Orchestrator Dashboard.
-•	Low Confidence (< 0.70)
-Auto-reject; triggers immediate re-planning.
-Mandatory Escalation
-Any content triggering Sensitive Topic filters (Politics, Health, Finance) is routed to HITL regardless of confidence score.
+3. Human-in-the-Loop (HITL) Strategy — Takeaway: route uncertain or sensitive items to humans
+- Confidence scoring: every action has `confidence_score` ∈ [0.0,1.0].
+- Routing rules:
+  - High (>0.90): auto-approve and execute.
+  - Medium (0.70–0.90): async hold for human review via Orchestrator Dashboard.
+  - Low (<0.70): auto-reject and trigger re-plan.
+- Mandatory escalation: any Sensitive Topic (Politics, Health, Finance) → HITL regardless of confidence.
 
-4. Database Strategy: Hybrid Persistence
-Chimera requires a Constellation of Independent Services. High-velocity metadata is handled via a multi-tiered persistence stack:
-Tier	Technology	Purpose
-Transactional	PostgreSQL	User data, campaign configurations, and operational logs
-Semantic Memory	Weaviate	Vector storage for RAG-based long-term persona recall
-Episodic Cache	Redis	High-speed short-term history and task queuing (Celery/BullMQ)
-Financial Ledger	On-Chain (Base)	Immutable record of financial transactions executed via Coinbase AgentKit
+4. Database Strategy: Hybrid Persistence — Takeaway: use specialized stores for each workload
+Chimera is a constellation of services; map storage to workload:
+- Transactional: PostgreSQL — user data, campaign config, operational logs.
+- Semantic Memory: Weaviate — vector store for RAG persona recall.
+- Episodic Cache: Redis — high-speed short-term history and task queuing (Celery/BullMQ).
+- Financial Ledger: On-chain (Base) — immutable financial records via Coinbase AgentKit.
 
-5. External Connectivity: Model Context Protocol (MCP)
-All external interactions occur exclusively through the MCP Layer to decouple reasoning from third-party API volatility.
-•	Perception (Resources)
-Agents see the world by polling resources such as:
-o	twitter://mentions
-o	news://market/prices
-•	Action (Tools)
-Agents act by invoking tools such as:
-o	generate_image()
-o	send_transaction()
+5. External Connectivity: Model Context Protocol (MCP) — Takeaway: MCP mediates all I/O
+- Perception (Resources): standardized resource URIs, e.g., `twitter://mentions`, `news://market/prices`.
+- Action (Tools): tool contracts (e.g., `generate_image()`, `send_transaction()`) invoked through MCP to isolate third-party volatility.
 
-6. Agentic Commerce & Governance
-Each Chimera Agent possesses a unique, non-custodial wallet.
-•	CFO Judge
-A specialized Judge sub-agent enforcing budget constraints (e.g., Max daily spend: $50 USDC).
-•	Security
-Private keys are managed via enterprise-grade secrets managers and injected only at runtime.
+6. Agentic Commerce & Governance — Takeaway: enforce finance and security guardrails
+- Non-custodial wallets per agent; CFO Judge enforces spend limits (e.g., max daily spend $50 USDC).
+- Keys managed by enterprise secrets manager, injected at runtime; rotate and audit keys regularly.
+
+Metrics and Acceptance Criteria
+- Latency: median task execution < 2s for non-LLM steps.
+- Throughput (concurrent workers):
+    - Dev: 50 workers
+    - Staging: 500 workers
+    - Prod: 5,000 workers
+- Cost (infra target):
+    - Dev: <$200/month
+    - Staging: <$2,000/month
+    - Prod: <$10,000/month
+- Availability: 99.9% (monthly uptime target)
+- Financial ledger: RPO = 0 (on-chain); reconciliation RTO < 1 hour
+- Safety: false positive rate on Sensitive Topic classifier < 1%.
+
+Roadmap & Next Steps
+- Create ADRs for each major decision (move ADRs into `/docs/adrs/`).
+- Implement a minimal PoC: Planner + 3 Workers + Judge + Redis queue.
+- Build Orchestrator Dashboard prototype for Medium-confidence reviews.
+
+Risks & Mitigations
+- Model drift → continuous evaluation pipelines and rollback capability.
+- Financial exposure → hard-limits enforced in CFO Judge and realtime alerts.
+
+Appendix
+- References: SOUL.md, MCP spec (.vscode/mcp.json), operational runbooks.
+- Diagrams: include Mermaid blocks above; export PNGs for presentations as needed.
+
+Change log
+- 2026-02-05: Added TL;DR, ADR template, metrics, and reorganized sections.
+
 
