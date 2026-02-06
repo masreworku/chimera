@@ -7,10 +7,10 @@ test:
 	python -m pytest tests/
 
 docker-build:
-	docker build -t chimera-governor .
+	docker build -t chimera .
 
 docker-test:
-	docker run --rm chimera-governor
+	docker run --rm -it chimera
 
 spec-check:
 	@echo "Checking for mandatory spec files..."

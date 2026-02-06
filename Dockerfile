@@ -19,5 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the project files
 COPY . .
 
-# Default command: Run the tests
-CMD ["pytest", "tests/"]
+# Default command: Run the tests with clear failure output
+# - `-q` quieter summary, `--maxfail=1` stop at first failure,
+# `-r a` show extra summary for all failures/errors
+CMD ["pytest", "-q", "tests/", "--maxfail=1", "-r", "a"]
