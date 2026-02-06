@@ -73,6 +73,3 @@ docker run --rm chimera
 
 Add a `LICENSE` file if you wish to make the license explicit. For questions, open an issue or contact the repository owner.
 
----
-
-If you want, I can also: add a minimal `README` badge, create a `CONTRIBUTING.md`, or adjust the Quickstart to use `poetry`/`pipx`/`pip` depending on your preferred workflow.
